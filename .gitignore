@@ -1,8 +1,44 @@
-.venv/
-__pycache__/
+# 🔐 Secrets
+ServiceAccountKey.json
+*.json
 .env
-*.pyc
 
+# 🐍 Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
 *.sqlite3
-results/
-final.mp3
+
+# 📦 Virtual Environment
+venv/
+.venv/
+env/
+
+# 🖥️ OS files
+.DS_Store
+Thumbs.db
+
+# 🧪 VS Code
+.vscode/
+
+# 📁 Logs
+*.log
+
+# 🎥 Large binaries (ffmpeg)
+ffmpeg/
+*.exe
+
+# 📦 Build / cache
+dist/
+build/
+*.egg-info/
+
+# 🧠 Model files (if any)
+*.pt
+*.pth
+*.h5
+
+# 📊 Data files (optional - if large)
+*.csv
+*.zip
