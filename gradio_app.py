@@ -1,10 +1,11 @@
 import gradio as gr
 import os
-from auth import register_user, login_user, save_user_chat, get_user_chats
+from auth import register_user, login_user
+from chat_db import save_user_chat, get_user_chats
 from brain_of_the_doctor import encode_image, analyze_image_with_query
 from voice_of_the_patient import transcribe_audio_with_groq
 from voice_of_the_doctor import text_to_speech_with_gtts
-from db import get_db_connection
+from chat_db import save_user_chat, get_user_chats
 
 
 # Session state
@@ -401,57 +402,23 @@ button.secondary:hover {
 """
 
 
-def add_chat(user_id, user_msg, bot_msg):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute(
-        "INSERT INTO chats (user_id, user_msg, bot_msg) VALUES (%s, %s, %s)",
-        (user_id, user_msg, bot_msg)
-    )
-    conn.commit()
-    cursor.close()
-    conn.close()
 
-def get_chats(user_id):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute(
-        "SELECT user_msg, bot_msg, created_at FROM chats WHERE user_id=%s ORDER BY created_at",
-        (user_id,)
-    )
-    rows = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    return rows
 
 
 # Helper functions
 from datetime import datetime
 
 def format_chats_for_gradio(user_id):
-    """
-    Fetch chat history and format it for Gradio's Chatbot(type="messages").
-    Each message will be a dict with 'role' and 'content'.
-    """
-    raw_chats = get_user_chats(user_id)
+    chats = get_user_chats(user_id)
     messages = []
 
-    for chat in raw_chats:
-        # Handle dict or tuple
-        if isinstance(chat, dict):
-            user_msg = chat.get("user_msg", "")
-            bot_msg = chat.get("bot_msg", "")
-        elif isinstance(chat, (tuple, list)):
-            user_msg = chat[1] if len(chat) > 1 else ""
-            bot_msg = chat[2] if len(chat) > 2 else ""
-        else:
-            continue  # Skip invalid
+    for chat in chats:
+        user_msg = chat.get("user_msg", "")
+        bot_msg = chat.get("bot_msg", "")
 
-        # Add user message
         if user_msg:
             messages.append({"role": "user", "content": user_msg})
 
-        # Add bot message
         if bot_msg:
             messages.append({"role": "assistant", "content": bot_msg})
 

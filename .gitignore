@@ -2,7 +2,7 @@
 __pycache__/
 .env
 *.pyc
-*.db
+
 *.sqlite3
 results/
 final.mp3
