@@ -1,5 +1,9 @@
 import gradio as gr
 import os
+import pandas as pd
+import plotly.express as px
+from dotenv import load_dotenv
+load_dotenv()
 from auth import register_user, login_user
 from chat_db import save_user_chat, get_user_chats
 from brain_of_the_doctor import encode_image, analyze_image_with_query
@@ -435,14 +439,36 @@ def signup(email, password):
 def login(email, password):
     global current_user
     login_result = login_user(email, password)
+
     if login_result["status"] == "success":
         user_id = login_result["user_id"]
         current_user["uid"] = user_id
         current_user["email"] = email
         chats = format_chats_for_gradio(user_id)
-        return f" Welcome {email}", gr.update(visible=True), chats
+
+        return (
+            f" Welcome {email}",
+            gr.update(visible=True),   # chatbox visible
+            chats,                     # chat history
+            gr.update(visible=True),   # dashboard tab visible
+            gr.update(visible=True)    # consultation tab visible
+        )
+
     else:
-        return f" Invalid email or password", gr.update(visible=False), []
+        return (
+            " Invalid email or password",
+            gr.update(visible=False),
+            [],
+            gr.update(visible=False),
+            gr.update(visible=False)
+        )
+
+def load_dashboard():
+    if not current_user["uid"]:
+        return 0,0,0,None
+    total, img, voice = get_dashboard_stats(current_user["uid"])
+    chart = create_medical_chart(current_user["uid"])
+    return total, img, voice, chart
 
 def process_inputs(image_filepath, audio_filepath, user_msg=""):
     if not current_user["uid"]:
@@ -481,6 +507,38 @@ def process_inputs(image_filepath, audio_filepath, user_msg=""):
 
     return speech_to_text_output, doctor_response, voice_of_doctor_path
 
+def get_dashboard_stats(user_id):
+    chats = get_user_chats(user_id)
+
+    total_consults = len(chats)
+
+    images_used = sum(1 for c in chats if "image" in str(c))
+
+    voice_used = sum(1 for c in chats if "audio" in str(c))
+
+    return total_consults, images_used, voice_used
+
+
+def create_medical_chart(user_id):
+
+    chats = get_user_chats(user_id)
+
+    data = {
+        "Type": ["Text", "Image", "Voice"],
+        "Usage": [
+            sum(1 for c in chats if c.get("user_msg")),
+            sum(1 for c in chats if "image" in str(c)),
+            sum(1 for c in chats if "audio" in str(c))
+        ]
+    }
+
+    df = pd.DataFrame(data)
+
+    fig = px.pie(df, names="Type", values="Usage",
+                 title="Consultation Input Types")
+
+    return fig
+
 # Build Gradio UI
 with gr.Blocks(css=custom_css, theme=gr.themes.Soft(primary_hue="cyan", secondary_hue="blue")) as demo:
     
@@ -502,7 +560,7 @@ with gr.Blocks(css=custom_css, theme=gr.themes.Soft(primary_hue="cyan", secondar
     with gr.Tabs():
         
         # Authentication Tab
-        with gr.Tab(" Authentication"):
+        with gr.Tab("Authentication") as auth_tab:
             with gr.Column(elem_classes="card-container"):
                 gr.HTML("""
                     <div id="auth-header">
@@ -569,9 +627,19 @@ with gr.Blocks(css=custom_css, theme=gr.themes.Soft(primary_hue="cyan", secondar
                     height=400,
                     show_label=False
                 )
-        
+        with gr.Tab("Dashboard", visible=False) as dashboard_tab:
+            with gr.Column(elem_classes="card-container"):                
+                gr.Markdown("## Patient Dashboard")
+                with gr.Row():
+                    total_consults = gr.Number(label="Total Consultations")
+                    image_cases = gr.Number(label="Image Cases")
+                    voice_cases = gr.Number(label="Voice Consultations")
+                gr.Markdown("### Medical Interaction Analytics")
+                chart = gr.Plot()
+                refresh_dashboard = gr.Button("Refresh Dashboard")
+
         # Doctor Chat tab
-        with gr.Tab("Doctor Consultation"):
+        with gr.Tab("Doctor Consultation", visible=False) as consult_tab:
             with gr.Column():
                 
                 # Chat History Section
@@ -704,7 +772,13 @@ with gr.Blocks(css=custom_css, theme=gr.themes.Soft(primary_hue="cyan", secondar
     login_btn.click(
         login,
         inputs=[email_login, password_login],
-        outputs=[login_status, chatbox, chatbox]
+        outputs=[
+            login_status,
+            chatbox,
+            chatbox,
+            dashboard_tab,
+            consult_tab
+        ]
     )
     
     signup_btn.click(
@@ -719,5 +793,9 @@ with gr.Blocks(css=custom_css, theme=gr.themes.Soft(primary_hue="cyan", secondar
         outputs=[stt_out, doctor_out, doctor_audio]
     )
 
+    refresh_dashboard.click(
+    load_dashboard,
+    outputs=[total_consults, image_cases, voice_cases, chart]
+    )
 if __name__ == "__main__":
     demo.launch(debug=True, share=False)   

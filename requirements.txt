@@ -58,3 +58,6 @@ urllib3==2.3.0; python_version >= '3.9'
 uvicorn==0.34.0; sys_platform != 'emscripten'
 websockets==14.1; python_version >= '3.9'
 python-dotenv
+pymongo==4.16.0
+redis==5.0.8
+python-dotenv==1.2.1
