@@ -1,20 +1,24 @@
+from datetime import datetime
+
 from mongo_db import chats_collection
 from redis_cache import redis_client
 import json
+
 
 # Save chat
 def save_user_chat(user_id, user_msg, bot_msg):
     chat = {
         "user_id": user_id,
         "user_msg": user_msg,
-        "bot_msg": bot_msg
+        "bot_msg": bot_msg,
+        "timestamp": datetime.utcnow()
     }
 
     # Save in MongoDB
     chats_collection.insert_one(chat)
 
     # Save in Redis (latest chats cache)
-    redis_client.lpush(f"chat:{user_id}", json.dumps(chat))
+    redis_client.lpush(f"chat:{user_id}", json.dumps(chat, default=str))
     redis_client.ltrim(f"chat:{user_id}", 0, 9)  # keep last 10
 
     return True
@@ -27,7 +31,9 @@ def get_user_chats(user_id):
     if cached:
         print(" FROM REDIS")
         return [json.loads(c) for c in cached]
+
     print(" FROM MONGO")
+
     # fallback to MongoDB
     chats = list(chats_collection.find({"user_id": user_id}))
 
