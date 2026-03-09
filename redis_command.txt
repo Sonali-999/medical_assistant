@@ -1,0 +1,30 @@
+# ── 1. See ALL keys in Redis ───────────────────
+KEYS *
+
+# ── 2. Check type of each key ─────────────────
+TYPE chat:69a9d0c3d4859f4f2a6a0f34
+TYPE session:YOUR_SESSION_TOKEN
+
+# ── 3. Read the chat list (all items) ─────────
+LRANGE chat:69a9d0c3d4859f4f2a6a0f34 0 -1
+
+# ── 4. See how many items in the chat list ─────
+LLEN chat:69a9d0c3d4859f4f2a6a0f34
+
+# ── 5. Read all session keys and their values ──
+KEYS session:*
+
+# ── 6. Read a specific session content ─────────
+GET session:YOUR_SESSION_TOKEN_HERE
+
+# ── 7. See ALL keys with their types at once ───
+redis-cli --scan | xargs -I{} redis-cli TYPE {}
+
+# Step 1 — see all keys
+KEYS *
+
+# Step 2 — check session key type
+TYPE session:YOUR_TOKEN_HERE
+
+# Step 3 — read session content (sessions are stored as strings/JSON)
+GET session:YOUR_TOKEN_HERE

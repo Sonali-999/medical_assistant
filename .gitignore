@@ -1,44 +1,30 @@
-# 🔐 Secrets
-ServiceAccountKey.json
-*.json
+# Virtual environment
+venv/
+
+# Environment variables
 .env
 
-# 🐍 Python
+# Python cache
 __pycache__/
 *.pyc
-*.pyo
-*.pyd
-*.sqlite3
 
-# 📦 Virtual Environment
-venv/
-.venv/
-env/
+# Audio files
+*.mp3
+*.wav
 
-# 🖥️ OS files
-.DS_Store
-Thumbs.db
+# Images generated
+*.png
+*.jpg
 
-# 🧪 VS Code
-.vscode/
+# ffmpeg binaries
+ffmpeg/
 
-# 📁 Logs
+# Secrets / API keys
+ServiceAccountKey.json
+
+# Logs
 *.log
 
-# 🎥 Large binaries (ffmpeg)
-ffmpeg/
-*.exe
-
-# 📦 Build / cache
-dist/
-build/
-*.egg-info/
-
-# 🧠 Model files (if any)
-*.pt
-*.pth
-*.h5
-
-# 📊 Data files (optional - if large)
-*.csv
-*.zip
+# OS files
+.DS_Store
+Thumbs.db
